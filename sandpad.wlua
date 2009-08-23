@@ -191,10 +191,8 @@ dialogs={
     about=iup.dialog{title=strings.about.title;
       iup.hbox{
         iup.vbox{
-          iup.hbox{alignment="ABOTTOM";
-            iup.label{title=strings.appname,font=values.printfont},
-            iup.label{title=version,font=values.editfont, }
-          },
+          iup.label{title=strings.appname,font=values.printfont},
+          iup.label{title=strings.formats.version:format(version)},
           iup.label{title=strings.about.byline},
           iup.label{title=strings.about.epoch},
           iup.fill{},
@@ -231,14 +229,6 @@ dialogs={
       ;dialogframe="YES"
       ;RESIZE="NO", MINBOX="NO", MAXBOX="NO" --redundancy for iup 2.x
     },
-
-    cg=iup.dialog{title=strings.help.title;
-      iup.vbox{
-      iup.label{title=strings.help.lines[1]},
-      iup.label{title=strings.help.lines[2]},
-      }
-      ;margin="4x4"
-    }
   }
 }
 
@@ -664,15 +654,15 @@ Sandpad=iup.dialog{title=strings.appname;
     },
     iup.submenu{title=strings.menus.help.title;
       iup.menu{
-        iup.item{title=strings.menus.help.colors;
+        iup.item{title=strings.menus.help.manual;
           action=function()
-            dialogs.help.cg:popup()
+            iup.Help(urls.manual)
           end
         },
         iup.separator{},
         iup.item{title=strings.menus.help.bugreport,
           action=function()
-            iup.Help(urls.tracker.bugs)
+            iup.Help(urls.bugreport)
           end
         },
         iup.separator{},

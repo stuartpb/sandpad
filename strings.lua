@@ -25,25 +25,12 @@ strings.tips={
   email="Clicking this button will open your default mail handler."
 }
 
-strings.email={
-  address="stuart@testtrack4.com",
-  bugsubject=strings.appname
-}
-
 strings.about={
   title="About "..strings.appname,
   byline="by Stuart P. Bentley",
   epoch="Created 7/14.2009",
   email="Contact",
   close="Fantastic."
-}
-
-strings.help={
-  title="Color Guide - "..strings.appname,
-  lines={
-    "Red text means there's an error.",
-    "Lighter backgrounds are parse errors."
-  }
 }
 
 strings.settings={
@@ -94,10 +81,14 @@ strings.menus={
     badds="Safety..."
   },
   help={title="Help";
-    colors="Color Guide...",
+    manual="Online Manual",
     bugreport="Report Bug",
     about="About..."
   }
+}
+
+strings.formats={
+  version="Version %s"
 }
 
 return strings
