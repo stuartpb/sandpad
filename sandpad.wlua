@@ -98,28 +98,34 @@ setfenv(1,shadowbox(_G))
 -------------------------------------------------------------------------------
 
 require "iuplua"
-
-img_star = iup.image {
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1 },
-  { 1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1 },
-  { 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2 },
-  { 1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1 },
-  { 1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
-  { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 }
-  -- Sets star image colors
-  ; colors = { "0 0 0", "255 255 255" }
-  ; bgcolor="0 0 0"
-}
+local icon=(io.open "sandpad.ico")
+if icon and pcall(require,"iupluaim") then
+  icon:close()
+  --counting on this to soon have alpha
+  icon=iup.LoadImage "sandpad.ico"
+else
+  icon = iup.image {
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,3,2,3,1,1,1,1,1,1,1 },
+    { 1,1,1,1,3,3,2,2,2,3,3,3,1,1,1,1 },
+    { 1,1,3,3,3,3,2,2,2,3,3,3,3,3,1,1 },
+    { 1,3,3,3,2,2,2,2,2,2,2,3,3,3,3,1 },
+    { 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2 },
+    { 1,3,3,3,2,2,2,2,2,2,2,3,3,3,3,1 },
+    { 1,1,3,3,3,3,2,2,2,3,3,3,3,1,1,1 },
+    { 1,1,1,1,3,3,2,2,2,3,3,1,1,1,1,1 },
+    { 1,1,1,1,1,1,3,2,3,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 },
+    { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 }
+    -- Sets star image colors
+    ; colors = { "BGCOLOR", "255 255 255", "0 0 0" }
+    ; bgcolor="BGCOLOR"
+  }
+end
 
 tabwidth=2
 blankoutput=""
@@ -199,12 +205,14 @@ dialogs={
           iup.fill{},
           iup.hbox{
             iup.button{title=strings.about.email,
-              tip=strings.tips.email;
+              tip=strings.tips.email,
+              padding="3x3",
               action=function()
                 iup.Help(urls.email)
               end
             },
             iup.button{title=strings.about.close,
+              padding="3x3",
               action=function()
                 return iup.CLOSE
               end
@@ -662,7 +670,7 @@ Sandpad=iup.dialog{title=strings.appname;
           end
         },
         iup.separator{},
-        iup.item{title=stringsmenus.help.bugreport,
+        iup.item{title=strings.menus.help.bugreport,
           action=function()
             iup.Help(urls.tracker.bugs)
           end
@@ -676,7 +684,7 @@ Sandpad=iup.dialog{title=strings.appname;
       }
     }
   }
-;size="HALFxHALF",gap=4,margin="4x4",icon=img_star,
+;size="HALFxHALF",gap=4,margin="4x4",icon=icon,
 minsize="400x250",
 shrink="YES",       --should never come into play under MINSIZE
 }

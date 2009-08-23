@@ -1,4 +1,4 @@
-require "strings" --email subject
+require "strings" --email subject; email address
 
 urls={
   main="http://sandpad.luaforge.net/",
