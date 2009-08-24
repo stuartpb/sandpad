@@ -3,44 +3,45 @@
 --by Stuart P. Bentley (stuart@testtrack4.com)
 --http://sandpad.luaforge.net
   local version="1.0"
+  local pushed="8/23.2009"
 ------------------------------------------------
 
 -------------------------------------------------------------------------------
---           !!! LOCALS ONLY UNTIL setfenv(1,shadowbox(_G)) !!!              --
+--         !!! USE ONLY LOCALS ABOVE setfenv(1,shadowbox(_G)) !!!            --
 -------------------------------------------------------------------------------
 
-local function shadowmt(imitate)
-  --table for variables that should return nil
-  --and not look for a value in the imitated table
-  local deleted={}
-  return {
-  __index=function(t,k)
-    if deleted[k] then
-      return nil
-    elseif type(imitate[k])=="table" then
-      t[k]=setmetatable({},shadowmt(imitate[k]))
-      return t[k]
-    else
-      return imitate[k]
-    end
-  end,
-  __newindex=function(t,k,v)
-    if not v and imitate[k] then
-      deleted[k]=true
-    else
-      deleted[k]=nil
-    end
-    rawset(t,k,v)
-  end
-  }
-end
-
-local function shadowtable(uptable)
-  return setmetatable({},shadowmt(uptable))
-end
-
-local fakeglobal --function defined below for upvalue access
+local shadowmt, shadowtable, fakeglobal, shadowbox, defaultenv
 do
+  function shadowmt(source)
+    --table for variables that should return nil
+    --and not look for a value in the source table
+    local deleted={}
+    return {
+    __index=function(t,k)
+      if deleted[k] then
+        return nil
+      elseif type(source[k])=="table" then
+        t[k]=setmetatable({},shadowmt(source[k]))
+        return t[k]
+      else
+        return source[k]
+      end
+    end,
+    __newindex=function(t,k,v)
+      if not v and source[k] then
+        deleted[k]=true
+      else
+        deleted[k]=nil
+      end
+      rawset(t,k,v)
+    end
+    }
+  end
+
+  function shadowtable(uptable)
+    return setmetatable({},shadowmt(uptable))
+  end
+
   local setfenv=setfenv
   local getfenv=getfenv
   local tonumber=tonumber
@@ -54,7 +55,7 @@ do
       if stacklevel then
         if stacklevel==0 then
           return fake_G
-        else
+        else if stacklevel>0
           return getfenv(stacklevel+1)
         end
       else
@@ -62,46 +63,45 @@ do
       end
     end
 
-    function fake_G.setfenv(f,table)
+    function fake_G.setfenv(f,env)
       stacklevel=tonumber(f)
       if stacklevel then
         if stacklevel==0 then
-          fake_G=table
+          fake_G=env
         else
-          setfenv(stacklevel+1,table)
+          setfenv(stacklevel+1,env)
         end
       else
-        setfenv(f,table)
+        setfenv(f,env)
       end
     end
 
     return fake_G
   end
-end
 
---returns a shadow sandbox global environment
-local function shadowbox(upenv)
-  return setmetatable(fakeglobal(upenv),shadowmt(upenv))
-end
+  --returns a shadow sandbox global environment
+  function shadowbox(upenv)
+    return setmetatable(fakeglobal(upenv),shadowmt(upenv))
+  end
 
---save clean default environment for use in boxes
-local defaultenv=_G
+  --save clean default environment for use in boxes
+  defaultenv=_G
+end
 --set new global environment shadowing original _G
---except setfenv(0,shadowbox(_G)) causes iup to remain unindexed
---after the call to require
+--except setfenv(0,shadowbox(_G)) causes iup to fail to index itself
 --so right now we do the next best thing
 --and set this chunk's environment instead
 setfenv(1,shadowbox(_G))
 
 -------------------------------------------------------------------------------
--- !!! DO NOT PUT ANY CODE MODIFYING THE GLOBAL ENVIRONMENT ABOVE THIS LINE !!!
+--        !!! DON'T MODIFY THE GLOBAL ENVIRONMENT ABOVE THIS LINE !!!        --
 -------------------------------------------------------------------------------
 
 require "iuplua"
+
 local icon=(io.open "sandpad.ico")
 if icon and pcall(require,"iupluaim") then
   icon:close()
-  --counting on this to soon have alpha
   icon=iup.LoadImage "sandpad.ico"
 else
   icon = iup.image {
@@ -163,74 +163,16 @@ values={
   printblank="230 240 252"
 }
 
-if true then--iup._VERSION:match"(%d+)%."~="3" then
+if true then
   values.editfont="Consolas::8"
   values.printfont="Consolas::20"
   printalign="ACENTER"
-else --prepare for the future
+else
   values.editfont="Consolas,Monospace, 8"
   values.printfont="Consolas,Monospace, 20"
   printalign="ACENTER:ACENTER"
   --also play around with "FORMATTING" and "AUTOHIDE"
 end
-
-local function cheapsettingform(var)
-  return " ".._G[var].." "..string.format(strings.settings.cheapformat,var)
-end
-
-dialogs={
-  settings=iup.dialog{title=strings.settings.title;
-    iup.hbox{
-    iup.label{title=strings.settings.delay},
-    iup.label{title=cheapsettingform"rundelay"}
-    }
-    ;margin="4x4"
-  },
-
-  help={
-    about=iup.dialog{title=strings.about.title;
-      iup.hbox{
-        iup.vbox{
-          iup.label{title=strings.appname,font=values.printfont},
-          iup.label{title=strings.formats.version:format(version)},
-          iup.label{title=strings.about.byline},
-          iup.label{title=strings.about.epoch},
-          iup.fill{},
-        },
-        iup.vbox{
-          iup.label{title="IUP "..iup._VERSION},
-          iup.label{title=_VERSION},
-          iup.fill{},
-          iup.hbox{
-            iup.button{title=strings.about.email,
-              tip=strings.tips.email,
-              padding="3x3",
-              action=function()
-                iup.Help(urls.email)
-              end
-            },
-            iup.button{title=strings.about.close,
-              padding="3x3",
-              action=function()
-                return iup.CLOSE
-              end
-            }
-            ;margin=0
-          }
-          ;alignment="ARIGHT"
-        }
-      ;gap=4,margin="4x4", alignment="ABOTTOM"
-      },
-      show_cb=function(self,state)
-        if state==iup.SHOW then
-          iup.SetFocus(self[1][2][4][2]) --not working in iup3rc1
-        end
-      end
-      ;dialogframe="YES"
-      ;RESIZE="NO", MINBOX="NO", MAXBOX="NO" --redundancy for iup 2.x
-    },
-  }
-}
 
 --set all controls in a table to a specific state
 function actable(cls,state)
@@ -314,7 +256,7 @@ boxes={ --individual box definitions
     text=iup.multiline{expand="YES",font=values.editfont,tabsize=tabwidth,
       tip=strings.tips.boxes[1],tipfont="SYSTEM"},
     color={
-      fParse={ --soon boxes[1].color.fParse will not come into play (String/Lua toggling)
+      fParse={ --soon this color will not come into play (String/Lua toggling)
         bg="255 192 192",
         fg=colors.red
       },
@@ -325,7 +267,7 @@ boxes={ --individual box definitions
     },
     cls={
       nameclear=iup.button{title=strings.buttons.fileid,
-        active="NO",padding="2x";--size="x14";
+        active="NO",padding="2x";
         action=function(self)
           boxes[1].cls.filename.value=""
           self.title=strings.buttons.fileid
@@ -362,7 +304,7 @@ boxes={ --individual box definitions
         end
       },
       save=iup.button{title=strings.buttons.save,focusonclick="NO",
-        active="NO",padding="2x";--size="x14";
+        active="NO",padding="2x";
         action=function()
         end
       },
@@ -408,7 +350,7 @@ boxes={ --individual box definitions
         end
       },
       clear=iup.button{title=strings.buttons.clear,focusonclick="NO",
-        expand="HORIZONTAL",--size="x14";
+        expand="HORIZONTAL",
         action=function()
           clearbox(2)
         end
@@ -448,6 +390,13 @@ boxes={ --individual box definitions
   }
 }
 
+if iup2 then
+  boxes[1].cls.save.size="x14";
+  boxes[1].cls.nameclear.size="x14";
+  boxes[2].cls.clear.size="x14";
+  boxes[3].cls.clear.size="x14";
+end
+
 for iBox, curBox in ipairs(boxes) do
   --initial chaining
   curBox.env=shadowbox(boxes[iBox-1].env)
@@ -478,15 +427,11 @@ for iBox, curBox in ipairs(boxes) do
       local ok, r=pcall(f)
       if not ok then
         self:fExec(r)
-      else
-        --call next action which will make subsequent calls down the line
+      else --call next action which will make subsequent calls down the line
 
-        --we don't need the following commented out check because
-        --the final box's action is redefined altogether at the end of the loop
-
-        --if iBox~=#boxes then
+        --if the final box's run weren't redefined at the end of the loop
+        --then you would only want to call this if iBox~=#boxes
         boxes[iBox+1]:eval()
-        --end
       end
     else
       self:fParse(message)
@@ -519,7 +464,9 @@ for iBox, curBox in ipairs(boxes) do
 
   if not curBox.fParse then
     function curBox:fParse(message)
-      returndata.value=message
+      returndata.value=
+        message:gsub('%[string "(.-)"%]:(%d-):',
+        'Parse error at line %2 in %1:')
       coloretdata(self.color.fParse)
       deactivate_down(iBox+1)
     end
@@ -527,14 +474,16 @@ for iBox, curBox in ipairs(boxes) do
 
   if not curBox.fExec then
     function curBox:fExec(message)
-      returndata.value=message
+      returndata.value=
+        message:gsub('%[string "(.-)"%]:(%d-):',
+        'Run error at line %2 in %1:')
       coloretdata(self.color.fExec)
       deactivate_down(iBox+1)
     end
   end
 end
 
---final box run setup
+--print box run setup
 boxes[#boxes].run=function(self,newcode)
   --TODO: Don't recompile if not newcode
   newcode=newcode or self.text.value
@@ -572,6 +521,76 @@ returndata=iup.multiline{font=values.printfont,bgcolor=values.printblank,
   alignment="ACENTER",expand="YES",border="YES",wordwrap="YES",
   readonly="YES",value=blankoutput,scrollbar="NO",size=nil,
   appendnewline="NO",tip=strings.tips.output,tipfont="SYSTEM"}
+
+local function cheapsettingform(var)
+  return " ".._G[var].." "..string.format(strings.settings.cheapformat,var)
+end
+
+dialogs={
+  settings=iup.dialog{title=strings.settings.title;
+    iup.hbox{
+    iup.label{title=strings.settings.delay},
+    iup.label{title=cheapsettingform"rundelay"}
+    }
+    ;margin="4x4"
+  },
+
+  about=iup.dialog{title=strings.about.title;
+    iup.vbox{
+      iup.hbox{
+        iup.vbox{
+          iup.label{title=strings.appname,font=values.printfont},
+          iup.label{title=strings.formats.version:format(version)},
+          iup.label{title=strings.about.byline},
+          iup.label{title=strings.formats.pushed:format(pushed)},
+        },
+        iup.fill{size=64},
+        iup.vbox{
+          iup.label{title="IUP "..iup._VERSION},
+          iup.label{title=_VERSION},
+          iup.fill{}
+          ;alignment="ARIGHT"
+        }
+        ;margin="0x0"
+      },
+      iup.hbox{
+        iup.button{title=strings.about.license,
+          tip=strings.tips.browser,
+          padding="4x2",
+          action=function()
+            iup.Help(urls.license)
+          end
+        },
+        iup.fill{},
+        iup.button{title=strings.about.email,
+          tip=strings.tips.email,
+          padding="4x2",
+          action=function()
+            iup.Help(urls.email)
+          end
+        },
+        iup.button{title=strings.about.close,
+          padding="4x2",
+          action=function()
+            return iup.CLOSE
+          end
+        }
+        ;margin=0,gap=4
+      }
+      ;gap="2x2",margin="8x6",alignment="ABOTTOM"
+    };
+    show_cb=function(self,state)
+      if state==iup.SHOW then
+        iup.SetFocus(self[1][2][4]) --not working in iup3rc2
+      end
+    end
+    ;dialogframe="YES"
+  },
+}
+
+for _,each in pairs(dialogs) do
+  each.icon=icon
+end
 
 Sandpad=iup.dialog{title=strings.appname;
   iup.hbox{
@@ -649,7 +668,6 @@ Sandpad=iup.dialog{title=strings.appname;
             dialogs.settings:popup()
           end
         },
-        --settings.invis
       }
     },
     iup.submenu{title=strings.menus.help.title;
@@ -660,15 +678,39 @@ Sandpad=iup.dialog{title=strings.appname;
           end
         },
         iup.separator{},
+        iup.item{title=strings.menus.help.askq,
+          action=function()
+            iup.Help(urls.askq)
+          end
+        },
         iup.item{title=strings.menus.help.bugreport,
           action=function()
             iup.Help(urls.bugreport)
           end
         },
         iup.separator{},
+        iup.submenu{title=strings.menus.help.pages;
+          iup.menu{
+            iup.item{title=strings.pages.home;
+              action=function()
+                iup.Help(urls.home)
+              end
+            },
+            iup.item{title=strings.pages.launchpad;
+              action=function()
+                iup.Help(urls.launchpad)
+              end
+            },
+            iup.item{title=strings.pages.luaforge;
+              action=function()
+                iup.Help(urls.luaforge)
+              end
+            },
+          }
+        },
         iup.item{title=strings.menus.help.about;
           action=function()
-            dialogs.help.about:popup()
+            dialogs.about:popup()
           end
         }
       }

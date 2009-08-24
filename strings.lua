@@ -22,13 +22,14 @@ strings.tips={
     save="Checking this box will save the file after every change. "..strings.nogo,
     run="Unchecking this box will make the above code only run when the adjacent button is pressed. "..strings.nogo
   },
-  email="Clicking this button will open your default mail handler."
+  email="Clicking this button will open your default e-mail composer.",
+  browser="Clicking this button will open your default web browser."
 }
 
 strings.about={
   title="About "..strings.appname,
   byline="by Stuart P. Bentley",
-  epoch="Created 7/14.2009",
+  license="View License",
   email="Contact",
   close="Fantastic."
 }
@@ -82,13 +83,22 @@ strings.menus={
   },
   help={title="Help";
     manual="Online Manual",
+    askq="Ask Question",
     bugreport="Report Bug",
+    pages=strings.appname.." Pages",
     about="About..."
   }
 }
 
+strings.pages={
+  home="Home",
+  launchpad="Launchpad",
+  luaforge="LuaForge"
+}
+
 strings.formats={
-  version="Version %s"
+  version="Version %s",
+  pushed="Pushed %s"
 }
 
 return strings
