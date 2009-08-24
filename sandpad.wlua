@@ -3,7 +3,7 @@
 --by Stuart P. Bentley (stuart@testtrack4.com)
 --http://sandpad.luaforge.net
   local version="1.0"
-  local pushed="8/23.2009"
+  local pushed="8/24.2009"
 ------------------------------------------------
 
 -------------------------------------------------------------------------------
