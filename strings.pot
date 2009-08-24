@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: stuart@testtrack4.com\n"
-"POT-Creation-Date: 2009-08-24 11:19-0700\n"
+"POT-Creation-Date: 2009-08-24 17:18-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,8 +16,8 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# combos={
-# box1={
+#. combos={
+#. box1={
 #: lua
 msgctext strings.combos.box1.lua
 msgid "Lua (Environment)"
@@ -28,12 +28,12 @@ msgctext strings.combos.box1.string
 msgid "String (...)"
 msgstr ""
 
-# }
+#. }
 
-# }
+#. }
 
-# menus={
-# file={
+#. menus={
+#. file={
 #: clear
 msgctext strings.menus.file.clear
 msgid "Clear All Boxes"
@@ -64,9 +64,9 @@ msgctext strings.menus.file.new
 msgid "New File..."
 msgstr ""
 
-# }
+#. }
 
-# settings={
+#. settings={
 #: badds
 msgctext strings.menus.settings.badds
 msgid "Safety..."
@@ -82,9 +82,9 @@ msgctext strings.menus.settings.exe
 msgid "Execution..."
 msgstr ""
 
-# }
+#. }
 
-# help={
+#. help={
 #: manual
 msgctext strings.menus.help.manual
 msgid "Online Manual"
@@ -115,11 +115,11 @@ msgctext strings.menus.help.bugreport
 msgid "Report Bug"
 msgstr ""
 
-# }
+#. }
 
-# }
+#. }
 
-# buttons={
+#. buttons={
 #: clear
 msgctext strings.buttons.clear
 msgid "Clear"
@@ -150,9 +150,9 @@ msgctext strings.buttons.fileid
 msgid "File:"
 msgstr ""
 
-# }
+#. }
 
-# about={
+#. about={
 #: title
 msgctext strings.about.title
 msgid "About Sandpad"
@@ -178,23 +178,23 @@ msgctext strings.about.email
 msgid "Contact"
 msgstr ""
 
-# }
+#. }
 
 #: appname
 msgctext strings.appname
 msgid "Sandpad"
 msgstr ""
 
-# frames={
+#. frames={
 #: box3
 msgctext strings.frames.box3
 msgid "print"
 msgstr ""
 
-# }
+#. }
 
-# tips={
-# auto={
+#. tips={
+#. auto={
 #: run
 msgctext strings.tips.auto.run
 msgid "Unchecking this box will make the above code only run when the adjacent button is pressed. (NOT IMPLEMENTED)"
@@ -205,7 +205,7 @@ msgctext strings.tips.auto.save
 msgid "Checking this box will save the file after every change. (NOT IMPLEMENTED)"
 msgstr ""
 
-# }
+#. }
 
 #: filename
 msgctext strings.tips.filename
@@ -217,7 +217,7 @@ msgctext strings.tips.email
 msgid "Clicking this button will open your default e-mail composer."
 msgstr ""
 
-# box1radio={
+#. box1radio={
 #: lua
 msgctext strings.tips.box1radio.lua
 msgid "Selecting this will execute the contents of the left box. (NOT ACTUALLY CHANGEABLE)"
@@ -228,14 +228,14 @@ msgctext strings.tips.box1radio.string
 msgid "Selecting this will pass the contents of the left box to the right one in a string as \"...\". (NOT IMPLEMENTED)"
 msgstr ""
 
-# }
+#. }
 
 #: browser
 msgctext strings.tips.browser
 msgid "Clicking this button will open your default web browser."
 msgstr ""
 
-# boxes={
+#. boxes={
 #: [1]
 msgctext strings.tips.boxes[1]
 msgid "When executed, code in this box starts in the default environment."
@@ -251,21 +251,21 @@ msgctext strings.tips.boxes[3]
 msgid "The contents of this box are returned to print()."
 msgstr ""
 
-# }
+#. }
 
 #: output
 msgctext strings.tips.output
 msgid "Calls to print (such as code in the form above) and errors are displayed here."
 msgstr ""
 
-# }
+#. }
 
 #: nogo
 msgctext strings.nogo
 msgid "(NOT IMPLEMENTED)"
 msgstr ""
 
-# settings={
+#. settings={
 #: cheapformat
 msgctext strings.settings.cheapformat
 msgid "(edit \"%s\" in script)"
@@ -286,9 +286,9 @@ msgctext strings.settings.delay
 msgid "Delay to run (in milliseconds):"
 msgstr ""
 
-# }
+#. }
 
-# formats={
+#. formats={
 #: version
 msgctext strings.formats.version
 msgid "Version %s"
@@ -299,25 +299,25 @@ msgctext strings.formats.pushed
 msgid "Pushed %s"
 msgstr ""
 
-# }
+#. }
 
-# pre={
+#. pre={
 #: auto
 msgctext strings.pre.auto
 msgid "Auto"
 msgstr ""
 
-# }
+#. }
 
-# cuebanners={
+#. cuebanners={
 #: filename
 msgctext strings.cuebanners.filename
 msgid "Filename"
 msgstr ""
 
-# }
+#. }
 
-# pages={
+#. pages={
 #: launchpad
 msgctext strings.pages.launchpad
 msgid "Launchpad"
@@ -333,7 +333,7 @@ msgctext strings.pages.home
 msgid "Home"
 msgstr ""
 
-# }
+#. }
 
 #: noco
 msgctext strings.noco
