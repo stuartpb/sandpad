@@ -42,56 +42,39 @@ do
     return setmetatable({},shadowmt(uptable))
   end
 
-  local setfenv=setfenv
-  local getfenv=getfenv
-  local tonumber=tonumber
-
   function fakeglobal(upenv)
     local fake_G={}
     fake_G._G=fake_G
-
-    function fake_G.getfenv(f)
-      stacklevel=tonumber(f)
-      if stacklevel then
-        if stacklevel==0 then
-          return fake_G
-        else if stacklevel>0
-          return getfenv(stacklevel+1)
-        end
-      else
-        return getfenv(f)
-      end
-    end
-
-    function fake_G.setfenv(f,env)
-      stacklevel=tonumber(f)
-      if stacklevel then
-        if stacklevel==0 then
-          fake_G=env
-        else
-          setfenv(stacklevel+1,env)
-        end
-      else
-        setfenv(f,env)
-      end
-    end
 
     return fake_G
   end
 
   --returns a shadow sandbox global environment
   function shadowbox(upenv)
-    return setmetatable(fakeglobal(upenv),shadowmt(upenv))
+    global=setmetatable(fakeglobal(upenv),shadowmt(upenv))
+
+    --delete setfenv/getfenv
+    --(reimplementation development in branches/1.0/internalfenv)
+    global.setfenv=nil
+    global.getfenv=nil
+
+    return global
   end
 
   --save clean default environment for use in boxes
   defaultenv=_G
 end
+
 --set new global environment shadowing original _G
 --except setfenv(0,shadowbox(_G)) causes iup to fail to index itself
 --so right now we do the next best thing
 --and set this chunk's environment instead
 setfenv(1,shadowbox(_G))
+
+--get the original environment's setfenv and getfenv
+--so we can set environments for boxes
+setfenv=defaultenv.setfenv
+getfenv=defaultenv.getfenv
 
 -------------------------------------------------------------------------------
 --        !!! DON'T MODIFY THE GLOBAL ENVIRONMENT ABOVE THIS LINE !!!        --
@@ -240,7 +223,6 @@ function coloretdata(colort)
   iup.Update(returndata)
 end
 
-local nofile=true
 boxes={ --individual box definitions
   --[[on env chains:
     each env runs from a shadow of the env above it,
@@ -266,53 +248,7 @@ boxes={ --individual box definitions
       }
     },
     cls={
-      nameclear=iup.button{title=strings.buttons.fileid,
-        active="NO",padding="2x";
-        action=function(self)
-          boxes[1].cls.filename.value=""
-          self.title=strings.buttons.fileid
-          boxes[1].cls.astog.value="OFF"
-          setactive(1,{"nameclear","astog","save"},"NO")
-          nofile=true
-        end},
-      filename=iup.text{expand="HORIZONTAL",
-        tip=strings.tips.filename;
-        action=function(self,change,value)
-          if value=="" then
-            boxes[1].cls.nameclear.title=strings.buttons.fileid
-            boxes[1].cls.astog.value="OFF"
-            setactive(1,{"nameclear","astog","save"},"NO")
-            nofile=true
-          else
-            if nofile then --wrong way to do this but
-              boxes[1].cls.nameclear.title=strings.buttons.clear
-              setactive(1,{"nameclear","astog"},"YES")
-              nofile=false
-            end
-            boxes[1].cls.astog.value="OFF"
-            setactive(1,"save","YES")
-          end
-        end},
-      astog=iup.toggle{title=strings.pre.auto,value="OFF",
-        active="NO",tip=strings.tips.auto.save;
-        action=function(self,state)
-          if state==1 then
-            setactive(1,"save","NO")
-          else
-            setactive(1,"save","YES")
-          end
-        end
-      },
-      save=iup.button{title=strings.buttons.save,focusonclick="NO",
-        active="NO",padding="2x";
-        action=function()
-        end
-      },
-      tgLua=iup.toggle{title=strings.combos.box1.lua, value="ON",
-        tip=strings.tips.box1radio.lua},
-      tgString=iup.toggle{title=strings.combos.box1.string,
-        tip=strings.tips.box1radio.string},
-      luable=iup.label{title="",expand="HORIZONTAL"}
+    --development branched to branches/1.0/leftboxcontrols
     }
   },
   {--2
@@ -595,27 +531,9 @@ end
 Sandpad=iup.dialog{title=strings.appname;
   iup.hbox{
     iup.vbox{
-      iup.hbox{
-        iup.hbox{
-          boxes[1].cls.nameclear,
-          boxes[1].cls.filename
-          ;gap=2,margin="0x0",alignment="ACENTER"
-        },
-        iup.hbox{
-          boxes[1].cls.astog,
-          boxes[1].cls.save
-          ;gap=-1,margin="0x0",alignment="ACENTER"
-        }
-        ;gap=4,margin=0,alignment="ACENTER"
-      },
-      boxes[1].text,
-      iup.radio{
-        iup.hbox{
-          boxes[1].cls.tgString,
-          boxes[1].cls.tgLua,
-          boxes[1].cls.luable
-        }
-      }
+      --development of filename in branches/1.0/leftboxcontrols
+      boxes[1].text
+      --development of string/Lua radio in branches/1.0/leftboxcontrols
       ;gap=4--,margin=0
     },
     iup.vbox{
@@ -652,9 +570,7 @@ Sandpad=iup.dialog{title=strings.appname;
   ;menu=iup.menu{
     iup.submenu{title=strings.menus.file.title;
       iup.menu{
-        iup.item{title=strings.menus.file.open},
-        iup.item{title=strings.menus.file.saveas},
-        iup.item{title=strings.menus.file.new},
+        --development of file options in branches/1.0/leftboxcontrols
         iup.item{title=strings.menus.file.clear,
           action=clearallboxes},
         iup.separator{},
