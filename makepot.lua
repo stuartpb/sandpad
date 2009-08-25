@@ -1,6 +1,6 @@
 function potstring(ref,english,context,flags)
   io.write("#: ",ref,"\n",
-    "msgctext ",context,"\n")
+    "msgctxt ",string.format("%q",context),"\n")
   if flags then for k,v in ipairs(flags) do
     if type(k)=="number" then
       io.write ("#, ",v,"\n")
@@ -52,7 +52,7 @@ io.write[[
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 ]]
