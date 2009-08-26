@@ -54,7 +54,7 @@ do
     global=setmetatable(fakeglobal(upenv),shadowmt(upenv))
 
     --delete setfenv/getfenv
-    --(reimplementation development in branches/1.0/internalfenv)
+    --(reimplementation development in internalfenv branch)
     global.setfenv=nil
     global.getfenv=nil
 
@@ -127,13 +127,15 @@ function print(...)
     end
   end
   msg[#msg+1]="\n"
-  if iup._VERSION:match"(%d+)%."~="3" then
+  if iup2 then
     returndata.value=returndata.value..table.concat(msg)
   else
     returndata.append=table.concat(msg)
   end
 end
-defaultenv.print=print;
+
+defaultenv.print=function() end
+--further development for print() in branch "multiprint"
 
 colors={
   red="255 0 0",
@@ -216,11 +218,7 @@ end
 function coloretdata(colort)
   returndata.bgcolor=colort.bg
   returndata.fgcolor=colort.fg
-
-  --without this line my LfW IUP2.7.1 won't update
-  --the color in the non-writeable area of the box
-  --(as it is now it still takes one redraw to fix)
-  iup.Update(returndata)
+  --BUG: outermost 1 pixel not updating
 end
 
 boxes={ --individual box definitions
@@ -234,7 +232,6 @@ boxes={ --individual box definitions
 
   [0]={env=defaultenv,output=""},
   {--1
-    name="Left Box",
     text=iup.multiline{expand="YES",font=values.editfont,tabsize=tabwidth,
       tip=strings.tips.boxes[1],tipfont="SYSTEM"},
     color={
@@ -248,11 +245,10 @@ boxes={ --individual box definitions
       }
     },
     cls={
-    --development branched to branches/1.0/leftboxcontrols
+    --development branched to leftboxcontrols
     }
   },
   {--2
-    name="Top Box",
     text=iup.multiline{expand="YES",font=values.editfont,tabsize=tabwidth,
       fgcolor=colors.black, bgcolor="255 250 223",
       tip=strings.tips.boxes[2],tipfont="SYSTEM",
@@ -294,7 +290,6 @@ boxes={ --individual box definitions
     }
   },
   {--3
-    name="Print Box",
     text=iup.text{expand="HORIZONTAL",font=values.editfont,tabsize=tabwidth,
       tip=strings.tips.boxes[3],tipfont="SYSTEM"
     },
@@ -357,7 +352,7 @@ for iBox, curBox in ipairs(boxes) do
     newcode=newcode or self.text.value
     --if the box is being run then it's at reactivation focus
     reactivate_box(self)
-    local f, message=loadstring(newcode,self.name)
+    local f, message=loadstring(newcode,strings.boxnames[iBox])
     if f then
       setfenv(f,self.env)
       local ok, r=pcall(f)
@@ -375,45 +370,39 @@ for iBox, curBox in ipairs(boxes) do
   end
 
   function curBox.text:action(c,newcode)
-    -- if c is a printable character
-    -- (arrow keys+home,end,pgup/down are all >300)
-    -- of course, this was more of an IUP2 problem-
-    -- IUP3 only calls action for changes now
-    -- (and non-printable characters like backspace and ctrl+v are 0)
-    if c<=256 then
-      -- output whatever the previous box output before this one
-      returndata.value=boxes[iBox-1].output
-      if c==string.byte"\n" or c==string.byte"\r"
-      and tonumber(self.caretpos)==#self.value
-      and string.sub(self.value, #self.value, #self.value)=="\n" then
-        --just run (not bothering to pass the "new code"
-        --that's the same as the old code but with
-        --2 newlines at the end instead of one)
-        curBox:run()
-        --ignore the new newline
-        return iup.IGNORE
-      else
-        curBox:eval(newcode)
-      end
+    returndata.value=boxes[iBox-1].output
+    if c==string.byte"\n" or c==string.byte"\r"
+    and tonumber(self.caretpos)==#self.value
+    and string.sub(self.value, -2)=="\n\n" then
+      --just run (not bothering to pass the "new code"
+      --that's the same as the old code but with
+      --2 newlines at the end instead of one)
+      curBox:run()
+      --ignore the new newline
+      return iup.IGNORE
+    else
+      curBox:eval(newcode)
     end
   end
 
   if not curBox.fParse then
     function curBox:fParse(message)
+      returndata.font=values.editfont
+      coloretdata(self.color.fParse)
       returndata.value=
         message:gsub('%[string "(.-)"%]:(%d-):',
-        'Parse error at line %2 in %1:')
-      coloretdata(self.color.fParse)
+        string.format("%%1:%%2: %s:",strings.errors.parse))
       deactivate_down(iBox+1)
     end
   end
 
   if not curBox.fExec then
     function curBox:fExec(message)
+      coloretdata(self.color.fExec)
+      returndata.font=values.editfont
       returndata.value=
         message:gsub('%[string "(.-)"%]:(%d-):',
-        'Run error at line %2 in %1:')
-      coloretdata(self.color.fExec)
+        string.format("%%1:%%2: %s:",strings.errors.run))
       deactivate_down(iBox+1)
     end
   end
@@ -427,13 +416,14 @@ boxes[#boxes].run=function(self,newcode)
   reactivate_box(self)
   if newcode:find"%S" then
     newcode="return "..newcode
-    local f, message=loadstring(newcode,self.name)
+    local f, message=loadstring(newcode,strings.boxnames[#boxes])
     if f then
       setfenv(f,self.env)
       local r={pcall(f)}
       if not r[1] then
         self:fExec(r[2])
       else
+        returndata.font=values.printfont
         if #r>1 then
           print(unpack(r,2))--,#r
           coloretdata(self.color.normal)
@@ -453,10 +443,10 @@ boxes[#boxes].run=function(self,newcode)
   end
 end
 
-returndata=iup.multiline{font=values.printfont,bgcolor=values.printblank,
-  alignment="ACENTER",expand="YES",border="YES",wordwrap="YES",
-  readonly="YES",value=blankoutput,scrollbar="NO",size=nil,
-  appendnewline="NO",tip=strings.tips.output,tipfont="SYSTEM"}
+returndata=iup.multiline{font=values.printfont, bgcolor=values.printblank,
+  alignment="ACENTER", border="YES", wordwrap="YES", expand="YES",
+  readonly="YES", value=blankoutput, scrollbar="AUTOHIDE", size=nil,
+  appendnewline="NO", tip=strings.tips.output, tipfont="SYSTEM"}
 
 local function cheapsettingform(var)
   return " ".._G[var].." "..string.format(strings.settings.cheapformat,var)
@@ -517,7 +507,7 @@ dialogs={
     };
     show_cb=function(self,state)
       if state==iup.SHOW then
-        iup.SetFocus(self[1][2][4]) --not working in iup3rc2
+        iup.SetFocus(self[1][2][4]) --fix committed
       end
     end
     ;dialogframe="YES"
@@ -531,9 +521,9 @@ end
 Sandpad=iup.dialog{title=strings.appname;
   iup.hbox{
     iup.vbox{
-      --development of filename in branches/1.0/leftboxcontrols
+      --development of filename in leftboxcontrols branch
       boxes[1].text
-      --development of string/Lua radio in branches/1.0/leftboxcontrols
+      --development of string/Lua radio in leftboxcontrols branch
       ;gap=4--,margin=0
     },
     iup.vbox{
@@ -570,7 +560,7 @@ Sandpad=iup.dialog{title=strings.appname;
   ;menu=iup.menu{
     iup.submenu{title=strings.menus.file.title;
       iup.menu{
-        --development of file options in branches/1.0/leftboxcontrols
+        --development of file options in leftboxcontrols branch
         iup.item{title=strings.menus.file.clear,
           action=clearallboxes},
         iup.separator{},

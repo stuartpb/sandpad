@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: stuart@testtrack4.com\n"
-"POT-Creation-Date: 2009-08-25 08:49-0700\n"
+"POT-Creation-Date: 2009-08-26 06:09+1700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -119,35 +119,28 @@ msgstr ""
 
 #. }
 
-#. buttons={
-#: clear
-msgctxt "strings.buttons.clear"
-msgid "Clear"
+#. formats={
+#: version
+msgctxt "strings.formats.version"
+msgid "Version %s"
 msgstr ""
 
-#: x
-msgctxt "strings.buttons.x"
-msgid "×"
+#: pushed
+msgctxt "strings.formats.pushed"
+msgid "Pushed %s"
 msgstr ""
 
-#: autorun
-msgctxt "strings.buttons.autorun"
-msgid "Autorun"
-msgstr ""
+#. }
 
-#: save
-msgctxt "strings.buttons.save"
-msgid "Save"
-msgstr ""
-
+#. errors={
 #: run
-msgctxt "strings.buttons.run"
-msgid "Run"
+msgctxt "strings.errors.run"
+msgid "Run error"
 msgstr ""
 
-#: fileid
-msgctxt "strings.buttons.fileid"
-msgid "File:"
+#: parse
+msgctxt "strings.errors.parse"
+msgid "Parse error"
 msgstr ""
 
 #. }
@@ -260,11 +253,6 @@ msgstr ""
 
 #. }
 
-#: nogo
-msgctxt "strings.nogo"
-msgid "(NOT IMPLEMENTED)"
-msgstr ""
-
 #. settings={
 #: cheapformat
 msgctxt "strings.settings.cheapformat"
@@ -288,15 +276,58 @@ msgstr ""
 
 #. }
 
-#. formats={
-#: version
-msgctxt "strings.formats.version"
-msgid "Version %s"
+#: nogo
+msgctxt "strings.nogo"
+msgid "(NOT IMPLEMENTED)"
 msgstr ""
 
-#: pushed
-msgctxt "strings.formats.pushed"
-msgid "Pushed %s"
+#. boxnames={
+#: [1]
+msgctxt "strings.boxnames[1]"
+msgid "Left Box"
+msgstr ""
+
+#: [2]
+msgctxt "strings.boxnames[2]"
+msgid "Top Box"
+msgstr ""
+
+#: [3]
+msgctxt "strings.boxnames[3]"
+msgid "Print Box"
+msgstr ""
+
+#. }
+
+#. buttons={
+#: clear
+msgctxt "strings.buttons.clear"
+msgid "Clear"
+msgstr ""
+
+#: x
+msgctxt "strings.buttons.x"
+msgid "×"
+msgstr ""
+
+#: autorun
+msgctxt "strings.buttons.autorun"
+msgid "Autorun"
+msgstr ""
+
+#: save
+msgctxt "strings.buttons.save"
+msgid "Save"
+msgstr ""
+
+#: run
+msgctxt "strings.buttons.run"
+msgid "Run"
+msgstr ""
+
+#: fileid
+msgctxt "strings.buttons.fileid"
+msgid "File:"
 msgstr ""
 
 #. }

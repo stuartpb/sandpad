@@ -34,6 +34,17 @@ strings.about={
   close="Fantastic."
 }
 
+strings.boxnames={
+  "Left Box",
+  "Top Box",
+  "Print Box"
+}
+
+strings.errors={
+  parse="Parse error",
+  run="Run error"
+}
+
 strings.settings={
   title=strings.appname.." Settings",
   delay="Delay to run (in milliseconds):",
