@@ -3,7 +3,7 @@
 --by Stuart P. Bentley (stuart@testtrack4.com)
 --http://sandpad.luaforge.net
   local version="1.0"
-  local pushed="8/24.2009"
+  local pushed="8/26.2009"
 ------------------------------------------------
 
 -------------------------------------------------------------------------------
@@ -106,7 +106,6 @@ else
     { 1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1 }
     -- Sets star image colors
     ; colors = { "BGCOLOR", "255 255 255", "0 0 0" }
-    ; bgcolor="BGCOLOR"
   }
 end
 
@@ -116,23 +115,6 @@ rundelay=500
 
 require "strings"
 require "urls"
-
-function print(...)
-  local msg = {}
-  local args={...}
-  for i, v in ipairs(args) do
-    msg[#msg+1]=tostring(v)
-    if i~= #args then
-      msg[#msg+1]="\t"
-    end
-  end
-  msg[#msg+1]="\n"
-  if iup2 then
-    returndata.value=returndata.value..table.concat(msg)
-  else
-    returndata.append=table.concat(msg)
-  end
-end
 
 colors={
   red="255 0 0",
@@ -218,19 +200,24 @@ function coloretdata(colort)
   --BUG: outermost 1 pixel not updating
 end
 
-boxes={ --individual box definitions
-  --[[on env chains:
-    each env runs from a shadow of the env above it,
-    and when reset (when executing that box's text)
-    remakes all shadows that come after it
-    (since they all need to shadow the new env).
-    env is stored in an index so it can be accessed
-    by the lower boxes' environments.]]
+function boxtextbox(i, bgcolor)
+  return iup.multiline{expand="YES",
+    font=values.editfont, tabsize=tabwidth,
+    tip=strings.tips.boxes[i],tipfont="SYSTEM",
+    bgcolor=bgcolor}
+end
 
+local topboxchanged=false
+local function topboxunauto()
+  topboxchanged=true
+end
+--gets set after the function is creates
+local topboxauto
+
+boxes={ --individual box definitions
   [0]={env=defaultenv,prints={}},
   {--1
-    text=iup.multiline{expand="YES",font=values.editfont,tabsize=tabwidth,
-      tip=strings.tips.boxes[1],tipfont="SYSTEM"},
+    text=boxtextbox(1),
     color={
       fParse={ --soon this color will not come into play (String/Lua toggling)
         bg="255 192 192",
@@ -246,10 +233,7 @@ boxes={ --individual box definitions
     }
   },
   {--2
-    text=iup.multiline{expand="YES",font=values.editfont,tabsize=tabwidth,
-      fgcolor=colors.black, bgcolor="255 250 223",
-      tip=strings.tips.boxes[2],tipfont="SYSTEM",
-      },
+    text=boxtextbox(2,"255 250 223"),
     color={
       fParse={
         bg="255 255 128",
@@ -266,16 +250,23 @@ boxes={ --individual box definitions
           if state==1 then
             boxes[2].cls.run.title=strings.buttons.autorun
             setactive(2,"run","NO")
+            boxes[2].text.action=topboxauto
           else
             boxes[2].cls.run.title=strings.buttons.run
             setactive(2,"run","YES")
+            boxes[2].text.action=topboxunauto
           end
         end
       },
       run=iup.button{title=strings.buttons.autorun,
         expand="HORIZONTAL",active="NO",--size="x14";
         action=function()
-          boxes[2]:eval()
+          if topboxchanged then
+            boxes[2]:eval()
+            topboxchanged=false
+          else
+            boxes[2]:run()
+          end
         end
       },
       clear=iup.button{title=strings.buttons.clear,
@@ -451,6 +442,7 @@ for iBox, curBox in ipairs(boxes) do
   curBox:rechain()
   curBox:continue()
 end
+topboxauto=boxes[2].text.action
 
 --print box run setup
 boxes[#boxes].eval=function(self,newcode)
@@ -474,7 +466,7 @@ boxes[#boxes].eval=function(self,newcode)
 end
 
 --this is *partly* because i don't know a better way to preserve
---the return arguments from print.
+--the return arguments from pcall (what with the possible nils).
 local function outputwith(self,success,...)
   if not success then
     self:fExec(...)
@@ -503,7 +495,7 @@ end
 
 returndata=iup.multiline{font=values.printfont, bgcolor=values.printblank,
   alignment="ACENTER", border="YES", wordwrap="YES", expand="YES",
-  readonly="YES", value=blankoutput, scrollbar="AUTOHIDE", size=nil,
+  readonly="YES", value=blankoutput, scrollbar="AUTOHIDE",
   appendnewline="NO", tip=strings.tips.output, tipfont="SYSTEM"}
 
 local function cheapsettingform(var)
