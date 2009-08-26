@@ -275,16 +275,17 @@ boxes={ --individual box definitions
           end
         end
       },
-      run=iup.button{title=strings.buttons.autorun,focusonclick="NO",
+      run=iup.button{title=strings.buttons.autorun,
         expand="HORIZONTAL",active="NO",--size="x14";
         action=function()
-          boxes[2].text:action(nil,boxes[2].text.value)
+          boxes[2]:run()
         end
       },
-      clear=iup.button{title=strings.buttons.clear,focusonclick="NO",
+      clear=iup.button{title=strings.buttons.clear,
         expand="HORIZONTAL",
         action=function()
           clearbox(2)
+          iup.SetFocus(boxes[2].text)
         end
       }
     }
@@ -312,9 +313,10 @@ boxes={ --individual box definitions
       }
     },
     cls={
-      clear=iup.button{title=strings.buttons.x,focusonclick="NO",padding="3x";
+      clear=iup.button{title=strings.buttons.x,padding="3x";
         action=function()
           clearbox(3)
+          iup.SetFocus(boxes[3].text)
         end
       }
     }
@@ -376,7 +378,7 @@ for iBox, curBox in ipairs(boxes) do
     and string.sub(self.value, -2)=="\n\n" then
       --just run (not bothering to pass the "new code"
       --that's the same as the old code but with
-      --2 newlines at the end instead of one)
+      --3 newlines at the end instead of 2)
       curBox:run()
       --ignore the new newline
       return iup.IGNORE
