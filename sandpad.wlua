@@ -134,9 +134,6 @@ function print(...)
   end
 end
 
-defaultenv.print=function() end
---further development for print() in branch "multiprint"
-
 colors={
   red="255 0 0",
   black="0 0 0",
@@ -168,7 +165,7 @@ function actable(cls,state)
   end
 end
 
---deactivate all boxes after and inclding the argument index
+--deactivate all boxes after and including the argument index
 function deactivate_down(laters)
   for i=laters, #boxes do
     actable(boxes[i].cls,"NO")
@@ -230,7 +227,7 @@ boxes={ --individual box definitions
     env is stored in an index so it can be accessed
     by the lower boxes' environments.]]
 
-  [0]={env=defaultenv,output=""},
+  [0]={env=defaultenv,prints={}},
   {--1
     text=iup.multiline{expand="YES",font=values.editfont,tabsize=tabwidth,
       tip=strings.tips.boxes[1],tipfont="SYSTEM"},
@@ -278,7 +275,7 @@ boxes={ --individual box definitions
       run=iup.button{title=strings.buttons.autorun,
         expand="HORIZONTAL",active="NO",--size="x14";
         action=function()
-          boxes[2]:run()
+          boxes[2]:eval()
         end
       },
       clear=iup.button{title=strings.buttons.clear,
@@ -331,9 +328,25 @@ if iup2 then
 end
 
 for iBox, curBox in ipairs(boxes) do
-  --initial chaining
-  curBox.env=shadowbox(boxes[iBox-1].env)
-  curBox.output=boxes[iBox-1].output
+
+  --allow chaining on initial boxes to do nothing
+  function curBox.f() end
+
+  --set up chaining
+  --called before executing a box's function
+  --and at the end of these definitions
+  function curBox:rechain()
+    --create a new environment for this iteration
+    --from the previous box's
+    self.env=shadowbox(boxes[iBox-1].env)
+    setfenv(self.f,self.env)
+    --internal environment function hookup
+    self.env.print = self.print
+  end
+
+  function curBox:continue()
+    curBox.prints={unpack(boxes[iBox-1].prints)}
+  end
 
   --initialize stored control states
   curBox.states={}
@@ -343,42 +356,54 @@ for iBox, curBox in ipairs(boxes) do
     end
   end
 
-  function curBox:eval(newcode)
-    --create a new environment for this iteration
-    self.env=shadowbox(boxes[iBox-1].env)
-    self:run(newcode)
+  --run: execute the box's function
+  --the box's function's environment may be coming from the last run
+  --of the previous box's function if this is being called in chain
+  --or it might be operating on itself
+  function curBox:run()
+    --if the box is being run then it is active
+    reactivate_box(self)
+    self:continue()
+
+    local ok, r=pcall(self.f)
+    if not ok then
+      self:fExec(r)
+    else --call next box's chain which will run from the environment
+      --left by this call and call chain itself (hence the name "chain")
+
+      --if the final box's run weren't redefined at the end of the loop
+      --then you would only want to call this if iBox~=#boxes
+      boxes[iBox+1]:chain()
+    end
   end
 
-  function curBox:run(newcode)
-    --TODO: Don't recompile if not newcode
+  function curBox:eval(newcode)
+    --if newcode wasn't passed then it's a situation where it hasn't
+    --been being passed
     newcode=newcode or self.text.value
-    --if the box is being run then it's at reactivation focus
-    reactivate_box(self)
-    local f, message=loadstring(newcode,strings.boxnames[iBox])
-    if f then
-      setfenv(f,self.env)
-      local ok, r=pcall(f)
-      if not ok then
-        self:fExec(r)
-      else --call next action which will make subsequent calls down the line
-
-        --if the final box's run weren't redefined at the end of the loop
-        --then you would only want to call this if iBox~=#boxes
-        boxes[iBox+1]:eval()
-      end
+    local message
+    self.f, message=loadstring(newcode,strings.boxnames[iBox])
+    if self.f then
+      self:chain()
     else
+      --reactivate so the user can fix the parse error
+      --(which could have been present before a prior box had an error
+      --and disabled all further boxes)
+      reactivate_box(self)
       self:fParse(message)
     end
   end
 
+  --chain: run from the previous box's environment
+  function curBox:chain()
+    self:rechain()
+    self:run()
+  end
+
   function curBox.text:action(c,newcode)
-    returndata.value=boxes[iBox-1].output
     if c==string.byte"\n" or c==string.byte"\r"
     and tonumber(self.caretpos)==#self.value
     and string.sub(self.value, -2)=="\n\n" then
-      --just run (not bothering to pass the "new code"
-      --that's the same as the old code but with
-      --3 newlines at the end instead of 2)
       curBox:run()
       --ignore the new newline
       return iup.IGNORE
@@ -408,41 +433,72 @@ for iBox, curBox in ipairs(boxes) do
       deactivate_down(iBox+1)
     end
   end
+
+  --internal environment functions
+  if not curBox.print then
+    --using upvalues because this is called from the environment
+    function curBox.print(...)
+      local tostrings={}
+      arg={n=select('#',...),...}
+      for i=1,arg.n do
+        tostrings[i]=tostring(arg[i])
+      end
+      curBox.prints[#curBox.prints+1]=table.concat(tostrings,"\t")
+    end
+  end
+
+  --link everything up
+  curBox:rechain()
+  curBox:continue()
 end
 
 --print box run setup
-boxes[#boxes].run=function(self,newcode)
-  --TODO: Don't recompile if not newcode
+boxes[#boxes].eval=function(self,newcode)
+  --if newcode wasn't passed then it's a situation where it hasn't
+  --been being passed
   newcode=newcode or self.text.value
-  --if the box is being run then it's at reactivation focus
-  reactivate_box(self)
   if newcode:find"%S" then
     newcode="return "..newcode
-    local f, message=loadstring(newcode,strings.boxnames[#boxes])
-    if f then
-      setfenv(f,self.env)
-      local r={pcall(f)}
-      if not r[1] then
-        self:fExec(r[2])
-      else
-        returndata.font=values.printfont
-        if #r>1 then
-          print(unpack(r,2))--,#r
-          coloretdata(self.color.normal)
-        else
-          print "nil"
-          coloretdata(self.color.blank)
-        end
-      end
-    else
-      self:fParse(message)
-    end
+  end
+  local message
+  self.f, message=loadstring(newcode,strings.boxnames[#boxes])
+  if self.f then
+    self:chain()
   else
-    returndata.value=boxes[#boxes-1].output
-    if returndata.value==blankoutput then
+    --reactivate so the user can fix the parse error
+    --(which could have been present before a prior box had an error
+    --and disabled all further boxes)
+    reactivate_box(self)
+    self:fParse(message)
+  end
+end
+
+--this is *partly* because i don't know a better way to preserve
+--the return arguments from print.
+local function outputwith(self,success,...)
+  if not success then
+    self:fExec(...)
+  else
+    if select('#',...)>0 then
+      self.print(...)
+      --if #{...}>0 then
+      coloretdata(self.color.normal)
+    elseif #self.prints >0 then
+      coloretdata(self.color.normal)
+    else --ain't nothing going to get printed nohow
       coloretdata(self.color.blank)
     end
+  --set the good print font since it will be
+  --the small one after an error
+    returndata.font=values.printfont
+    returndata.value=table.concat(self.prints,'\n')
   end
+end
+
+boxes[#boxes].run=function(self)
+  reactivate_box(self)
+  self:continue()
+  outputwith(self,pcall(self.f))
 end
 
 returndata=iup.multiline{font=values.printfont, bgcolor=values.printblank,
